@@ -2,12 +2,12 @@ package main
 
 import (
 	"golang/di"
-	"log"
-	"net/http"
+	"golang/mocking"
 	"os"
 )
 
 func main() {
 	di.Greet(os.Stdout, "Foo")
-	log.Fatal(http.ListenAndServe(":8000", http.HandlerFunc(di.MyGreetHandler)))
+	// log.Fatal(http.ListenAndServe(":8000", http.HandlerFunc(di.MyGreetHandler)))
+	mocking.Countdown(os.Stdout)
 }
