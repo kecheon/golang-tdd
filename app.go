@@ -2,17 +2,34 @@ package main
 
 import (
 	"fmt"
-	"golang/di"
+	"golang-tdd/di"
+
+	// "golang-tdd/httpserver"
+	"golang-tdd/http_server"
 	"io"
+	"log"
+	"net/http"
 	"os"
 	"time"
 )
+
+type InMemoryPlayerStore struct {
+	Store    map[string]int
+	winCalls []string
+}
+
+func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
+	return 123
+}
+func (i *InMemoryPlayerStore) RecordWin(name string) {}
 
 func main() {
 	di.Greet(os.Stdout, "Foo")
 	// log.Fatal(http.ListenAndServe(":8000", http.HandlerFunc(di.MyGreetHandler)))
 	sleeper := &ConfigurableSleeper{1 * time.Second, time.Sleep}
 	Countdown(os.Stdout, sleeper)
+	server := &http_server.PlayerServer{Store: &InMemoryPlayerStore{}}
+	log.Fatal(http.ListenAndServe(":8000", server))
 }
 
 const finalWord = "Go!"
