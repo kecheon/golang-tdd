@@ -2,33 +2,34 @@ package main
 
 import (
 	"fmt"
-	"golang-tdd/di"
-
-	// "golang-tdd/httpserver"
 	"golang-tdd/http_server"
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"time"
 )
 
+func NewInMemoryPlayerStore() *InMemoryPlayerStore {
+	return &InMemoryPlayerStore{map[string]int{}}
+}
+
 type InMemoryPlayerStore struct {
-	Store    map[string]int
-	winCalls []string
+	Store map[string]int
 }
 
 func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
-	return 123
+	return i.Store[name]
 }
-func (i *InMemoryPlayerStore) RecordWin(name string) {}
+func (i *InMemoryPlayerStore) RecordWin(name string) {
+	i.Store[name]++
+}
 
 func main() {
-	di.Greet(os.Stdout, "Foo")
+	// di.Greet(os.Stdout, "Foo")
 	// log.Fatal(http.ListenAndServe(":8000", http.HandlerFunc(di.MyGreetHandler)))
-	sleeper := &ConfigurableSleeper{1 * time.Second, time.Sleep}
-	Countdown(os.Stdout, sleeper)
-	server := &http_server.PlayerServer{Store: &InMemoryPlayerStore{}}
+	// sleeper := &ConfigurableSleeper{1 * time.Second, time.Sleep}
+	// Countdown(os.Stdout, sleeper)
+	server := &http_server.PlayerServer{Store: NewInMemoryPlayerStore()}
 	log.Fatal(http.ListenAndServe(":8000", server))
 }
 
