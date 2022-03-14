@@ -1,0 +1,47 @@
+package http_server
+
+import (
+	"reflect"
+	"strings"
+	"testing"
+)
+
+func TestFileStorage(t *testing.T) {
+	database := strings.NewReader(`[
+			{"Name": "Cleo", "Wins": 10},
+			{"Name": "Chris", "Wins": 33}]`)
+	store := FileStoragePlayerStore{database}
+	t.Run("get league from file storage", func(t *testing.T) {
+		got := store.GetLeague()
+		want := []Player{
+			{"Cleo", 10},
+			{"Chris", 33},
+		}
+		assertLeague(t, got, want)
+
+		got2 := store.GetLeague()
+		assertLeague(t, got2, want)
+	})
+	t.Run("get score from file storage", func(t *testing.T) {
+		got, err := store.GetScore("Chris")
+		if err != nil {
+			t.Fatalf("Error getting score")
+		}
+		want := 33
+		assertScoreEquals(t, got, want)
+	})
+}
+
+func assertLeague(t testing.TB, got []Player, want []Player) {
+	t.Helper()
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func assertScoreEquals(t testing.TB, got int, want int) {
+	t.Helper()
+	if got != want {
+		t.Errorf("got status %d, want %d", got, want)
+	}
+}
