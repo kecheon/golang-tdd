@@ -9,27 +9,12 @@ import (
 	"time"
 )
 
-func NewInMemoryPlayerStore() *InMemoryPlayerStore {
-	return &InMemoryPlayerStore{map[string]int{}}
-}
-
-type InMemoryPlayerStore struct {
-	Store map[string]int
-}
-
-func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
-	return i.Store[name]
-}
-func (i *InMemoryPlayerStore) RecordWin(name string) {
-	i.Store[name]++
-}
-
 func main() {
 	// di.Greet(os.Stdout, "Foo")
 	// log.Fatal(http.ListenAndServe(":8000", http.HandlerFunc(di.MyGreetHandler)))
 	// sleeper := &ConfigurableSleeper{1 * time.Second, time.Sleep}
 	// Countdown(os.Stdout, sleeper)
-	server := &http_server.PlayerServer{Store: NewInMemoryPlayerStore()}
+	server := &http_server.PlayerServer{Store: http_server.NewInMemoryPlayerStore()}
 	log.Fatal(http.ListenAndServe(":8000", server))
 }
 
