@@ -22,7 +22,7 @@ func (s *StubPlayerStore) RecordWin(name string) {
 	s.winCalls = append(s.winCalls, name)
 }
 
-func TestGerPlayers(t *testing.T) {
+func TestGetPlayers(t *testing.T) {
 	cases := []struct {
 		name string
 		path string
@@ -40,7 +40,7 @@ func TestGerPlayers(t *testing.T) {
 		nil,
 	}
 
-	server := &PlayerServer{&store}
+	server := NewPlayerServer(&store)
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -79,7 +79,7 @@ func TestStoreWins(t *testing.T) {
 		map[string]int{},
 		nil,
 	}
-	server := &PlayerServer{&store}
+	server := NewPlayerServer(&store)
 
 	t.Run("it returns accepted POST", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/players/%s", "Pepper"), nil)
@@ -97,4 +97,21 @@ func TestStoreWins(t *testing.T) {
 			t.Errorf("got %q want %q", store.winCalls[0], "Pepper")
 		}
 	})
+}
+
+func TestLeague(t *testing.T) {
+	store := StubPlayerStore{}
+	server := NewPlayerServer(&store)
+
+	t.Run("returns 200 on /league", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodGet, "/league", nil)
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+
+		if response.Code != 200 {
+			t.Errorf("got %d want %d", response.Code, 200)
+		}
+
+	})
+
 }

@@ -14,7 +14,7 @@ func main() {
 	// log.Fatal(http.ListenAndServe(":8000", http.HandlerFunc(di.MyGreetHandler)))
 	// sleeper := &ConfigurableSleeper{1 * time.Second, time.Sleep}
 	// Countdown(os.Stdout, sleeper)
-	server := &http_server.PlayerServer{Store: http_server.NewInMemoryPlayerStore()}
+	server := http_server.NewPlayerServer(http_server.NewInMemoryPlayerStore())
 	log.Fatal(http.ListenAndServe(":8000", server))
 }
 

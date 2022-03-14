@@ -9,8 +9,8 @@ import (
 )
 
 func TestRecordingWinsAndRetreive(t *testing.T) {
-	store := NewInMemoryPlayerStore()
-	server := http_server.PlayerServer{Store: store}
+	store := http_server.NewInMemoryPlayerStore()
+	server := http_server.NewPlayerServer(store)
 	player := "Pepper"
 
 	request, _ := http.NewRequest("POST", fmt.Sprintf("/players/%s", player), nil)
