@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
 type StubPlayerStore struct {
 	scores   map[string]int
 	winCalls []string
+	league   []Player
 }
 
 func (s *StubPlayerStore) GetPlayerScore(name string) int {
@@ -20,6 +22,11 @@ func (s *StubPlayerStore) GetPlayerScore(name string) int {
 func (s *StubPlayerStore) RecordWin(name string) {
 	// function without routine won't be called
 	s.winCalls = append(s.winCalls, name)
+}
+
+func (s *StubPlayerStore) GetLeague() []Player {
+	// function without routine won't be called
+	return s.league
 }
 
 func TestGetPlayers(t *testing.T) {
@@ -38,6 +45,7 @@ func TestGetPlayers(t *testing.T) {
 			"Floyd":  10,
 		},
 		nil,
+		nil,
 	}
 
 	server := NewPlayerServer(&store)
@@ -48,9 +56,7 @@ func TestGetPlayers(t *testing.T) {
 			response := httptest.NewRecorder()
 			server.ServeHTTP(response, request)
 
-			if response.Code != 200 {
-				t.Errorf("got %d want %d", response.Code, 200)
-			}
+			assertStatus(t, response.Code, http.StatusOK)
 
 			got := response.Body.String()
 			want := c.want
@@ -78,6 +84,7 @@ func TestStoreWins(t *testing.T) {
 	store := StubPlayerStore{
 		map[string]int{},
 		nil,
+		nil,
 	}
 	server := NewPlayerServer(&store)
 
@@ -85,9 +92,7 @@ func TestStoreWins(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/players/%s", "Pepper"), nil)
 		response := httptest.NewRecorder()
 		server.ServeHTTP(response, request)
-		if response.Code != http.StatusAccepted {
-			t.Errorf("got %d want %d", response.Code, http.StatusAccepted)
-		}
+		assertStatus(t, response.Code, http.StatusAccepted)
 
 		if len(store.winCalls) != 1 {
 			t.Errorf("got %d want %d", len(store.winCalls), 1)
@@ -100,18 +105,36 @@ func TestStoreWins(t *testing.T) {
 }
 
 func TestLeague(t *testing.T) {
-	store := StubPlayerStore{}
-	server := NewPlayerServer(&store)
 
 	t.Run("returns 200 on /league", func(t *testing.T) {
+		wantedLeague := []Player{
+			{"Cleo", 32},
+			{"Chris", 20},
+			{"Tiest", 14},
+		}
+
+		store := StubPlayerStore{nil, nil, wantedLeague}
+		server := NewPlayerServer(&store)
 		request, _ := http.NewRequest(http.MethodGet, "/league", nil)
 		response := httptest.NewRecorder()
 		server.ServeHTTP(response, request)
 
-		if response.Code != 200 {
-			t.Errorf("got %d want %d", response.Code, 200)
+		got := GetLeagueFromResponse(t, response.Body)
+		assertStatus(t, response.Code, http.StatusOK)
+
+		if !reflect.DeepEqual(got, wantedLeague) {
+			t.Errorf("got %v want %v", got, wantedLeague)
 		}
 
+		if response.Result().Header.Get("Content-Type") != "application/json" {
+			t.Errorf("got %v, want %v", got, "application/json")
+		}
 	})
+}
 
+func assertStatus(t testing.TB, got int, want int) {
+	t.Helper()
+	if got != want {
+		t.Fatalf("status %d, want %d", got, want)
+	}
 }

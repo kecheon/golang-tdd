@@ -15,6 +15,7 @@ func main() {
 	// sleeper := &ConfigurableSleeper{1 * time.Second, time.Sleep}
 	// Countdown(os.Stdout, sleeper)
 	server := http_server.NewPlayerServer(http_server.NewInMemoryPlayerStore())
+	fmt.Println("Server is Listening to http://localhost:8000")
 	log.Fatal(http.ListenAndServe(":8000", server))
 }
 

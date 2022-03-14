@@ -1,14 +1,23 @@
 package http_server
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
+	"testing"
 )
+
+type Player struct {
+	Name string `json:"name"`
+	Wins int    `json:"wins"`
+}
 
 type PlayerStore interface {
 	GetPlayerScore(name string) int
 	RecordWin(name string)
+	GetLeague() []Player
 }
 
 type PlayerServer struct {
@@ -28,7 +37,9 @@ func NewPlayerServer(store PlayerStore) *PlayerServer {
 }
 
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
+	// w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(p.getLeagueTable())
 }
 
 func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
@@ -53,4 +64,17 @@ func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {
 	} else {
 		fmt.Fprint(w, score)
 	}
+}
+
+func (p *PlayerServer) getLeagueTable() []Player {
+	return p.Store.GetLeague()
+}
+
+func GetLeagueFromResponse(t testing.TB, body io.Reader) (league []Player) {
+	t.Helper()
+	err := json.NewDecoder(body).Decode(&league)
+	if err != nil {
+		t.Fatalf("response %q can not be parsed into slice of Player, '%v", body, err)
+	}
+	return
 }
