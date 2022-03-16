@@ -33,10 +33,7 @@ func TestFileStorage(t *testing.T) {
 		store := FileStoragePlayerStore{database}
 		// store := createStore(t, data)
 
-		got, err := store.GetScore("Chris")
-		if err != nil {
-			t.Fatalf("Error getting score")
-		}
+		got := store.GetScore("Chris")
 		want := 33
 		assertScoreEquals(t, got, want)
 	})
@@ -46,10 +43,7 @@ func TestFileStorage(t *testing.T) {
 		defer cleanDatabase()
 		store := FileStoragePlayerStore{database}
 		store.RecordWin("Chris")
-		got, err := store.GetScore("Chris")
-		if err != nil {
-			t.Fatalf("Error getting score %v", err)
-		}
+		got := store.GetScore("Chris")
 		want := 34
 		assertScoreEquals(t, got, want)
 	})
