@@ -7,7 +7,7 @@ import (
 )
 
 type FileStoragePlayerStore struct {
-	database io.ReadSeeker
+	database io.ReadWriteSeeker
 }
 
 func (s *FileStoragePlayerStore) GetLeague() []Player {
@@ -34,4 +34,22 @@ func (s *FileStoragePlayerStore) GetScore(name string) (int, error) {
 		}
 	}
 	return wins, nil
+}
+
+func (s *FileStoragePlayerStore) RecordWin(name string) {
+	league := s.GetLeague()
+	for i, player := range league {
+		if player.Name == name {
+			league[i].Wins++
+			/* TOD
+			reason not using player.Wins++ because
+			range over the slice returns copy of the element
+			updating Wins value of a copy element has no effect
+			have to update the original league
+			*/
+			break
+		}
+	}
+	s.database.Seek(0, 0)
+	json.NewEncoder(s.database).Encode(league)
 }

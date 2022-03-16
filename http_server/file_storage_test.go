@@ -1,17 +1,22 @@
 package http_server
 
 import (
+	"io"
+	"io/ioutil"
+	"os"
 	"reflect"
-	"strings"
 	"testing"
 )
 
 func TestFileStorage(t *testing.T) {
-	database := strings.NewReader(`[
+	data := `[
 			{"Name": "Cleo", "Wins": 10},
-			{"Name": "Chris", "Wins": 33}]`)
-	store := FileStoragePlayerStore{database}
+			{"Name": "Chris", "Wins": 33}]`
 	t.Run("get league from file storage", func(t *testing.T) {
+		database, cleanDatabase := createTempFile(t, data)
+		defer cleanDatabase()
+		store := FileStoragePlayerStore{database}
+
 		got := store.GetLeague()
 		want := []Player{
 			{"Cleo", 10},
@@ -23,11 +28,29 @@ func TestFileStorage(t *testing.T) {
 		assertLeague(t, got2, want)
 	})
 	t.Run("get score from file storage", func(t *testing.T) {
+		database, cleanDatabase := createTempFile(t, data)
+		defer cleanDatabase()
+		store := FileStoragePlayerStore{database}
+		// store := createStore(t, data)
+
 		got, err := store.GetScore("Chris")
 		if err != nil {
 			t.Fatalf("Error getting score")
 		}
 		want := 33
+		assertScoreEquals(t, got, want)
+	})
+
+	t.Run("store wins for existing players", func(t *testing.T) {
+		database, cleanDatabase := createTempFile(t, data)
+		defer cleanDatabase()
+		store := FileStoragePlayerStore{database}
+		store.RecordWin("Chris")
+		got, err := store.GetScore("Chris")
+		if err != nil {
+			t.Fatalf("Error getting score %v", err)
+		}
+		want := 34
 		assertScoreEquals(t, got, want)
 	})
 }
@@ -44,4 +67,26 @@ func assertScoreEquals(t testing.TB, got int, want int) {
 	if got != want {
 		t.Errorf("got status %d, want %d", got, want)
 	}
+}
+
+func createTempFile(t testing.TB, initialData string) (io.ReadWriteSeeker, func()) {
+
+	t.Helper()
+	tmpFile, err := ioutil.TempFile("", "db")
+	if err != nil {
+		t.Fatalf("could not create temp file %v", err)
+	}
+	tmpFile.Write([]byte(initialData))
+	removeFile := func() {
+		tmpFile.Close()
+		os.Remove(tmpFile.Name())
+	}
+	return tmpFile, removeFile
+}
+
+func createStore(t testing.TB, data string) (store FileStoragePlayerStore) {
+	t.Helper()
+	database, cleanDatabase := createTempFile(t, data)
+	defer cleanDatabase()
+	return FileStoragePlayerStore{database}
 }

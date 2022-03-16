@@ -36,7 +36,7 @@ func TestRecordingWinsAndRetreive(t *testing.T) {
 		request, _ = http.NewRequest("GET", "/league", nil)
 		server.ServeHTTP(response, request)
 		got := http_server.GetLeagueFromResponse(t, response.Body)
-		want := []http_server.Player{
+		want := http_server.League{
 			{Name: "Pepper", Wins: 3},
 		}
 
